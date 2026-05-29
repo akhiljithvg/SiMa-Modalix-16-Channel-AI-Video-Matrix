@@ -1,3 +1,4 @@
+Markdown
 # SiMa Modalix 16-Channel AI Video Matrix
 
 ![SiMa.ai](https://img.shields.io/badge/Platform-SiMa.ai_Modalix-blue)
@@ -49,3 +50,59 @@ for f in *.mp4; do
 done
 mv safe_8bit/*.mp4 .
 rm -rf safe_8bit
+2. Configure the Media Source Script
+Edit mediasrc.sh on your laptop to hardcode the direct USB-C IP:
+
+Bash
+# Inside mediasrc.sh
+LOCAL_IP="10.42.0.1"
+3. Install the Pipeline on the Modalix Board
+SSH into the Modalix board (ssh sima@10.42.0.57) and install the multi-channel package:
+
+Bash
+cd ~
+sudo SIMA_CLI_CHECK_FOR_UPDATE=0 sima-cli install -v 2.0.0 samples/multichannel
+When prompted for the RTSP Source IP, enter: 10.42.0.1
+
+Apply the Testing Patch:
+Bypass dashboard strict validations by safely injecting the just_test key into the manifest:
+
+Bash
+sudo python3 -c "import json; f='/data/simaai/applications/pipeline-multichannel/manifest.json'; d=json.load(open(f)); d['info']['just_test']=False; json.dump(d, open(f,'w'), indent=2)"
+🏃‍♂️ Running the Matrix
+1. Start the RTSP Broadcaster (On Laptop):
+
+Bash
+pkill -f mediamtx
+pkill -f ffmpeg
+./mediasrc.sh ../videos-720p16
+2. Start the OptiView Dashboard (On Board):
+
+Bash
+# Clear any lingering locked memory pools
+sudo pkill -9 gst_app
+sudo ipcs -m | awk '/^0x/ {print $2}' | xargs -n 1 sudo ipcrm -m 2>/dev/null
+
+# Launch dashboard
+optiview
+3. View the Demo:
+
+Open Google Chrome and navigate to: https://10.42.0.57:9900
+
+Select pipeline-multichannel.
+
+Click the Rocket icon (🚀) to initialize the ML hardware.
+
+Click the TV icon (📺) to view the live 16-channel matrix with AI bounding boxes.
+
+🛑 Troubleshooting
+Hardware crashes (bit_depth == 8 error): The hardware decoder strictly requires 8-bit video. Ensure your ffmpeg script uses -pix_fmt yuv420p.
+
+Blank Streams / JSON Errors: The manifest.json on the board was corrupted. Re-apply the Python JSON patch.
+
+Video Stuttering / Lag: Ensure your laptop is streaming to 10.42.0.1 (Direct USB-C) and not over the local Wi-Fi router. Switch Chrome view to 4-channels if the browser struggles to render 16 streams simultaneously.
+
+Segmentation Fault / Locked Mutex: Run sudo ipcs -m | awk '/^0x/ {print $2}' | xargs -n 1 sudo ipcrm -m 2>/dev/null on the board to clear locked hardware memory buffers.
+
+📝 License
+This project is licensed under the MIT License.
