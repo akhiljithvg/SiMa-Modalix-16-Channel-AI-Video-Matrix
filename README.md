@@ -1,5 +1,7 @@
 # SiMa Modalix 16-Channel AI Video Matrix
 
+![Demo Screenshot](DemoScreenshot.webp)
+
 High-performance multi-stream AI video analytics using the **SiMa.ai Modalix** platform, powered by **GStreamer**, **YOLO object detection**, and **MediaMTX RTSP streaming**.
 
 This project demonstrates a fully hardware-accelerated pipeline capable of processing **16 simultaneous RTSP video streams** with real-time AI inference and live monitoring through the **OptiView Dashboard**.
